@@ -167,7 +167,7 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
       </details>
       <details>
         <summary>Vocês entregam?</summary>
-        <p>Combinamos retirada ou entrega em Londrina na hora da compra, do jeito mais fácil pra você.</p>
+        <p>Sim! Retirada em Londrina é grátis. Entrega em Londrina tem taxa fixa de R$ 10,00 e em Ibiporã ou Cambé, R$ 15,00. Pra outras cidades, calculamos o frete pelo CEP no WhatsApp.</p>
       </details>
     </div>
   </section>
@@ -189,9 +189,12 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
     <div id="sitens"></div>
     <p style="font-weight:800;margin:18px 0 10px">Como você prefere receber?</p>
     <label class="opt"><input type="radio" name="receb" value="Retirada em Londrina" checked><span><b>Retirada em Londrina</b><span>grátis · combinamos local e horário</span></span></label>
-    <label class="opt"><input type="radio" name="receb" value="Entrega em Londrina"><span><b>Entrega em Londrina</b><span>valor combinado no WhatsApp</span></span></label>
+    <label class="opt"><input type="radio" name="receb" value="Entrega em Londrina" data-frete="10"><span><b>Entrega em Londrina</b><span>taxa fixa de R$ 10,00</span></span></label>
+    <label class="opt"><input type="radio" name="receb" value="Entrega em Ibiporã ou Cambé" data-frete="15"><span><b>Entrega em Ibiporã ou Cambé</b><span>taxa fixa de R$ 15,00</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Envio para outra cidade"><span><b>Envio para outra cidade</b><span>frete calculado pelo CEP no WhatsApp</span></span></label>
-    <div class="stotal"><span>Total das peças</span><span id="stotal">R$ 0,00</span></div>
+    <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700;margin-top:12px"><span>Peças</span><span id="spec">R$ 0,00</span></div>
+    <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700"><span>Entrega</span><span id="sfrete">grátis</span></div>
+    <div class="stotal"><span>Total</span><span id="stotal">R$ 0,00</span></div>
     <button class="szap" id="szap" type="button">Finalizar no WhatsApp</button>
     <p class="snote">Confirmamos a disponibilidade e o valor final com você no WhatsApp 💛</p>
     <p class="snote"><a href="#" id="sfechar" style="color:#6F7955">continuar olhando</a></p>
@@ -207,6 +210,8 @@ try{saco=JSON.parse(localStorage.getItem("ninho-sacolinha")||"[]")}catch(e){saco
 saco=saco.filter(function(id){return PECAS.some(function(p){return p.id===id})});
 function salvar(){try{localStorage.setItem("ninho-sacolinha",JSON.stringify(saco))}catch(e){}}
 function brl(n){return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function frete(){var r=document.querySelector('input[name="receb"]:checked');if(!r)return 0;var f=r.getAttribute("data-frete");if(f)return Number(f);return r.value==="Envio para outra cidade"?null:0}
+document.getElementById("saco").addEventListener("change",function(){render()});
 function render(){
   var g=document.getElementById("prods");
   g.innerHTML=PECAS.map(function(p){
@@ -219,7 +224,10 @@ function render(){
       return '<div class="sitem"><img src="'+p.foto+'" alt=""><span style="font-weight:700;font-size:.95rem">'+p.nome+'<br><span style="color:#8A7762;font-size:.85rem">Tam. '+p.tam+' · '+brl(p.preco)+'</span></span><button class="rm" data-id="'+id+'" type="button">remover</button></div>';}).join("");
   }else{itens.innerHTML='<p style="color:#8A7762;font-weight:700">Sua sacolinha está vazia — escolhe uma pecinha ali em cima 🪺</p>'}
   var tot=saco.reduce(function(a,id){var p=PECAS.filter(function(x){return x.id===id})[0];return a+p.preco},0);
-  document.getElementById("stotal").textContent=brl(tot);
+  var fr=frete();
+  document.getElementById("spec").textContent=brl(tot);
+  document.getElementById("sfrete").textContent=fr===null?"a calcular no WhatsApp":(fr?brl(fr):"grátis");
+  document.getElementById("stotal").textContent=brl(tot+(fr||0))+(fr===null?" + frete":"");
   document.getElementById("sacoN").textContent=saco.length;
   document.getElementById("sacoBtn").style.display=saco.length?"block":"none";
 }
@@ -241,7 +249,7 @@ document.getElementById("szap").addEventListener("click",function(){
   if(!saco.length)return;
   var receb=document.querySelector('input[name="receb"]:checked').value;
   var tot=0,linhas=saco.map(function(id){var p=PECAS.filter(function(x){return x.id===id})[0];tot+=p.preco;return "• "+p.nome+" ("+p.id+", tam. "+p.tam+") — "+brl(p.preco)});
-  var msg="Oi! Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+"\nTotal das peças: "+brl(tot);
+  var fr=frete();var msg="Oi! Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+(fr?" ("+brl(fr)+")":"")+"\nTotal das peças: "+brl(tot)+(fr===null?"\nFrete: calcular pelo meu CEP":"\nTotal com entrega: "+brl(tot+(fr||0)));
   window.open("https://wa.me/5543991900501?text="+encodeURIComponent(msg),"_blank");
 });
 render();
