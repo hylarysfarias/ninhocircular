@@ -41,6 +41,29 @@ p{margin:0 0 14px;color:var(--mut);font-weight:600}
 .step b{display:flex;width:52px;height:52px;margin:0 auto 10px;border-radius:50%;align-items:center;justify-content:center;font:700 1.6rem "Cormorant Garamond",serif;color:var(--bg)}
 .step span{font-size:.92rem;color:var(--mut);font-weight:700;line-height:1.4;display:block}
 .divider{border:none;border-top:2px dashed var(--bege);margin:52px 0}
+.prod{background:#FFF8EF;border:1px solid #EBD9C3;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.prod img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;border:1px solid #EBD9C3}
+.prod b{font-size:1rem;line-height:1.3}
+.prod .meta{color:var(--mut);font-size:.9rem;font-weight:700}
+.prod .preco{color:var(--clay);font-weight:800;font-size:1.2rem}
+.prod button{font:800 .95rem Nunito,sans-serif;border:2px solid var(--clay);background:var(--clay);color:#FBF0E4;border-radius:999px;padding:10px 14px;cursor:pointer;min-height:44px}
+.prod button.no{background:transparent;color:var(--clay)}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:26px}
+#sacoBtn{position:fixed;right:18px;bottom:18px;z-index:40;background:var(--olive);color:#FBF0E4;border:none;border-radius:999px;font:800 1.05rem Nunito,sans-serif;padding:16px 24px;box-shadow:0 6px 0 rgba(74,58,44,.2);cursor:pointer;display:none}
+#saco{position:fixed;inset:0;background:rgba(74,58,44,.5);z-index:50;display:none;align-items:flex-end;justify-content:center}
+#saco.on{display:flex}
+.sacoBox{background:#FBF0E4;border-radius:24px 24px 0 0;width:min(560px,100%);max-height:86vh;overflow:auto;padding:24px 22px 28px;text-align:left}
+.sacoBox h3{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.7rem;margin:0 0 14px}
+.sitem{display:flex;align-items:center;gap:12px;background:#FFF8EF;border:1px solid #EBD9C3;border-radius:16px;padding:10px 14px;margin-bottom:10px}
+.sitem img{width:54px;height:54px;object-fit:cover;border-radius:10px}
+.sitem .rm{margin-left:auto;background:none;border:none;color:var(--clay);font-weight:800;cursor:pointer;font-size:.9rem;min-height:44px}
+.opt{display:flex;gap:10px;align-items:flex-start;background:#FFF8EF;border:2px solid #EBD9C3;border-radius:16px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.opt input{margin-top:5px;accent-color:var(--clay)}
+.opt b{display:block}
+.opt span{color:var(--mut);font-size:.88rem;font-weight:700}
+.stotal{display:flex;justify-content:space-between;font-weight:800;font-size:1.15rem;margin:14px 0}
+.szap{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;background:#1faa52;color:#fff;border:none;border-radius:999px;font:800 1.1rem Nunito,sans-serif;padding:16px;cursor:pointer;min-height:52px}
+.snote{color:var(--mut);font-size:.85rem;font-weight:700;text-align:center;margin:10px 0 0}
 footer{background:var(--olive);color:var(--bege);text-align:center;padding:36px 20px 44px;position:relative;margin-top:60px}
 footer::before{content:"";position:absolute;left:0;right:0;top:-15px;height:16px;background:radial-gradient(circle at 15px 100%,var(--olive) 14.5px,transparent 15.5px) 0 0/30px 16px repeat-x}
 footer .script{color:var(--blob);margin-bottom:4px}
@@ -79,6 +102,15 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
       <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M16 4C9.4 4 4 8.9 4 15c0 3.5 1.8 6.6 4.6 8.6L7.5 28l4.8-2.1c1.2.3 2.4.5 3.7.5 6.6 0 12-4.9 12-11S22.6 4 16 4z"/></svg>
       Entre para o nosso grupo
     </a>
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="script">prontinhas pra um novo ninho</p>
+    <h2>Disponíveis agora</h2>
+    <p>Toca em "Adicionar à sacolinha" e finaliza pelo WhatsApp — simples assim.</p>
+    <div class="prods" id="prods"></div>
   </section>
 
   <hr class="divider">
@@ -149,6 +181,71 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
     <a class="btn" style="background:#6F7955" href="https://instagram.com/ninhocircular" target="_blank" rel="noopener">@ninhocircular</a>
   </section>
 </main>
+
+<button id="sacoBtn" type="button">🧺 Sacolinha (<span id="sacoN">0</span>)</button>
+<div id="saco" role="dialog" aria-label="Sua sacolinha">
+  <div class="sacoBox">
+    <h3>Sua sacolinha 🧺</h3>
+    <div id="sitens"></div>
+    <p style="font-weight:800;margin:18px 0 10px">Como você prefere receber?</p>
+    <label class="opt"><input type="radio" name="receb" value="Retirada em Londrina" checked><span><b>Retirada em Londrina</b><span>grátis · combinamos local e horário</span></span></label>
+    <label class="opt"><input type="radio" name="receb" value="Entrega em Londrina"><span><b>Entrega em Londrina</b><span>valor combinado no WhatsApp</span></span></label>
+    <label class="opt"><input type="radio" name="receb" value="Envio para outra cidade"><span><b>Envio para outra cidade</b><span>frete calculado pelo CEP no WhatsApp</span></span></label>
+    <div class="stotal"><span>Total das peças</span><span id="stotal">R$ 0,00</span></div>
+    <button class="szap" id="szap" type="button">Finalizar no WhatsApp</button>
+    <p class="snote">Confirmamos a disponibilidade e o valor final com você no WhatsApp 💛</p>
+    <p class="snote"><a href="#" id="sfechar" style="color:#6F7955">continuar olhando</a></p>
+  </div>
+</div>
+
+<script>
+var PECAS=[
+  {id:"NC-011",nome:"Conjunto Carter's — camiseta pêssego + shorts xadrez",tam:"9-12 meses (12M)",preco:40,foto:"fotos/nc-011.jpg"}
+];
+var saco=[];
+try{saco=JSON.parse(localStorage.getItem("ninho-sacolinha")||"[]")}catch(e){saco=[]}
+saco=saco.filter(function(id){return PECAS.some(function(p){return p.id===id})});
+function salvar(){try{localStorage.setItem("ninho-sacolinha",JSON.stringify(saco))}catch(e){}}
+function brl(n){return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function render(){
+  var g=document.getElementById("prods");
+  g.innerHTML=PECAS.map(function(p){
+    var no=saco.indexOf(p.id)>=0;
+    return '<div class="prod"><img src="'+p.foto+'" alt="'+p.nome+'"><b>'+p.nome+'</b><span class="meta">Tam. '+p.tam+'</span><span class="preco">'+brl(p.preco)+'</span><button type="button" class="'+(no?"no":"")+'" data-id="'+p.id+'">'+(no?"Na sacolinha ✓ (tirar)":"Adicionar à sacolinha")+'</button></div>';
+  }).join("");
+  var itens=document.getElementById("sitens");
+  if(saco.length){
+    itens.innerHTML=saco.map(function(id){var p=PECAS.filter(function(x){return x.id===id})[0];
+      return '<div class="sitem"><img src="'+p.foto+'" alt=""><span style="font-weight:700;font-size:.95rem">'+p.nome+'<br><span style="color:#8A7762;font-size:.85rem">Tam. '+p.tam+' · '+brl(p.preco)+'</span></span><button class="rm" data-id="'+id+'" type="button">remover</button></div>';}).join("");
+  }else{itens.innerHTML='<p style="color:#8A7762;font-weight:700">Sua sacolinha está vazia — escolhe uma pecinha ali em cima 🪺</p>'}
+  var tot=saco.reduce(function(a,id){var p=PECAS.filter(function(x){return x.id===id})[0];return a+p.preco},0);
+  document.getElementById("stotal").textContent=brl(tot);
+  document.getElementById("sacoN").textContent=saco.length;
+  document.getElementById("sacoBtn").style.display=saco.length?"block":"none";
+}
+document.getElementById("prods").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  var id=b.getAttribute("data-id");var i=saco.indexOf(id);
+  if(i>=0){saco.splice(i,1)}else{saco.push(id)}
+  salvar();render();
+});
+document.getElementById("sitens").addEventListener("click",function(e){
+  var b=e.target.closest(".rm");if(!b)return;
+  var i=saco.indexOf(b.getAttribute("data-id"));if(i>=0)saco.splice(i,1);
+  salvar();render();
+});
+document.getElementById("sacoBtn").addEventListener("click",function(){document.getElementById("saco").classList.add("on")});
+document.getElementById("sfechar").addEventListener("click",function(e){e.preventDefault();document.getElementById("saco").classList.remove("on")});
+document.getElementById("saco").addEventListener("click",function(e){if(e.target===this)this.classList.remove("on")});
+document.getElementById("szap").addEventListener("click",function(){
+  if(!saco.length)return;
+  var receb=document.querySelector('input[name="receb"]:checked').value;
+  var tot=0,linhas=saco.map(function(id){var p=PECAS.filter(function(x){return x.id===id})[0];tot+=p.preco;return "• "+p.nome+" ("+p.id+", tam. "+p.tam+") — "+brl(p.preco)});
+  var msg="Oi! Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+"\nTotal das peças: "+brl(tot);
+  window.open("https://wa.me/5543991900501?text="+encodeURIComponent(msg),"_blank");
+});
+render();
+</script>
 
 <footer>
   <p class="script">de um ninho pra outro ♡</p>
