@@ -229,7 +229,7 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
     <label class="opt"><input type="radio" name="receb" value="Entrega em Londrina" data-frete="10"><span><b>Entrega em Londrina</b><span>taxa fixa de R$ 10,00</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Entrega em Ibiporã ou Cambé" data-frete="15"><span><b>Entrega em Ibiporã ou Cambé</b><span>taxa fixa de R$ 15,00</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Envio para outra cidade"><span><b>Envio para outra cidade</b><span>frete calculado pelo CEP no WhatsApp</span></span></label>
-    <label class="campo" id="sendBox" hidden><b id="sendLbl">Endereço de entrega</b><input type="text" id="send" autocomplete="street-address" placeholder="Rua, número e bairro"></label>
+    <label class="campo" id="sendBox" style="margin:-2px 0 14px 14px;padding-left:12px;border-left:3px solid var(--clay)" hidden><b id="sendLbl">Endereço de entrega</b><input type="text" id="send" autocomplete="street-address" placeholder="Rua, número e bairro"></label>
     <p style="font-weight:800;margin:14px 0 10px">Forma de pagamento</p>
     <div class="pagrow">
       <label><input type="radio" name="pag" value="Pix" checked>Pix</label>
@@ -303,7 +303,9 @@ function render(){
   document.getElementById("sfrete").textContent=fr===null?"a calcular no WhatsApp":(fr?brl(fr):"grátis");
   document.getElementById("stotal").textContent=brl(tot+(fr||0))+(fr===null?" + frete":"");
   var rv=document.querySelector('input[name="receb"]:checked').value,entrega=rv!=="Retirada em Londrina",fora=rv==="Envio para outra cidade";
-  document.getElementById("sendBox").hidden=!entrega;
+  var sb=document.getElementById("sendBox"),ol=document.querySelector('input[name="receb"]:checked').closest("label");
+  sb.hidden=!entrega;
+  if(entrega&&ol.nextElementSibling!==sb){ol.parentNode.insertBefore(sb,ol.nextSibling)}
   document.getElementById("sendLbl").textContent=fora?"CEP e endereço pra envio":"Endereço de entrega";
   document.getElementById("send").placeholder=fora?"CEP, rua, número, bairro e cidade":"Rua, número e bairro";
   document.getElementById("spagDica").textContent=document.querySelector('input[name="pag"]:checked').value==="Crédito"?"No crédito, as taxas da bandeira são acrescentadas ao valor — a gente te passa o total no WhatsApp.":"";
