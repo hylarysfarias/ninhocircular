@@ -87,14 +87,17 @@ section[id]{scroll-margin-top:112px}
 .opt input{margin-top:5px;accent-color:var(--clay)}
 .opt b{display:block}
 .opt span{color:var(--mut);font-size:.88rem;font-weight:700}
+[hidden]{display:none!important}
 .campo{display:block;margin:0 0 12px}
 .campo>b{display:block;font-weight:800;margin-bottom:6px}
 .campo input{width:100%;font:600 1rem Nunito,sans-serif;color:var(--ink);background:#FFF8EF;border:2px solid #EBD9C3;border-radius:14px;padding:12px 14px;min-height:48px}
 .campo input:focus{outline:none;border-color:var(--clay)}
-.pagrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.pagrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:6px}
 .pagrow label{display:flex;align-items:center;justify-content:center;gap:6px;background:#FFF8EF;border:2px solid #EBD9C3;border-radius:14px;padding:10px 6px;min-height:48px;font-weight:800;cursor:pointer}
 .pagrow input{accent-color:var(--clay)}
 .pagrow label:has(input:checked),.opt:has(input:checked){border-color:var(--clay)}
+.parc{width:100%;font:700 1rem Nunito,sans-serif;color:var(--ink);background:#FFF8EF;border:2px solid #EBD9C3;border-radius:14px;padding:12px 14px;min-height:48px;margin:6px 0 0}
+.parc:focus{outline:none;border-color:var(--clay)}
 .dica{color:var(--mut);font-size:.85rem;font-weight:700;margin:0 0 12px}
 .erro{color:#A33A1E;font-weight:800;font-size:.92rem;text-align:center;margin:0 0 10px}
 .erro:empty{display:none}
@@ -200,7 +203,7 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
       </details>
       <details>
         <summary>Quais as formas de pagamento?</summary>
-        <p>Pix, débito e crédito. No crédito, as taxas da bandeira são acrescentadas ao valor.</p>
+        <p>Pix ou cartão de crédito em até 12x. No crédito, a taxa do cartão é acrescentada ao valor — você vê o total certinho na sacolinha antes de finalizar.</p>
       </details>
       <details>
         <summary>Vocês entregam?</summary>
@@ -233,12 +236,13 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
     <p style="font-weight:800;margin:14px 0 10px">Forma de pagamento</p>
     <div class="pagrow">
       <label><input type="radio" name="pag" value="Pix" checked>Pix</label>
-      <label><input type="radio" name="pag" value="Débito">Débito</label>
       <label><input type="radio" name="pag" value="Crédito">Crédito</label>
     </div>
-    <p class="dica" id="spagDica"></p>
+    <label class="campo" id="sparcBox" hidden style="margin:10px 0 0"><b>Parcelas</b><select class="parc" id="sparc" aria-label="Número de parcelas"></select></label>
+    <p class="dica" id="spagDica" style="margin-top:8px"></p>
     <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700;margin-top:12px"><span>Peças</span><span id="spec">R$ 0,00</span></div>
     <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700"><span>Entrega</span><span id="sfrete">grátis</span></div>
+    <div id="staxaRow" hidden style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700"><span>Taxa do cartão</span><span id="staxa">R$ 0,00</span></div>
     <div class="stotal"><span>Total</span><span id="stotal">R$ 0,00</span></div>
     <p class="erro" id="serro" role="alert"></p>
     <button class="szap" id="szap" type="button">Finalizar no WhatsApp</button>
@@ -260,6 +264,9 @@ try{saco=JSON.parse(localStorage.getItem("ninho-sacolinha")||"[]")}catch(e){saco
 saco=saco.filter(function(id){return PECAS.some(function(p){return p.id===id})});
 function salvar(){try{localStorage.setItem("ninho-sacolinha",JSON.stringify(saco))}catch(e){}}
 function brl(n){return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+var FATOR={1:1.044,2:1.065,3:1.0754,4:1.086,5:1.0966,6:1.1072,7:1.1442,8:1.1552,9:1.1662,10:1.1774,11:1.1888,12:1.2};
+function r2(n){return Math.round(n*100)/100}
+function cartao(base,n){var t=r2(base*FATOR[n]);return{total:t,parcela:r2(t/n),taxa:r2(t-base)}}
 function frete(){var r=document.querySelector('input[name="receb"]:checked');if(!r)return 0;var f=r.getAttribute("data-frete");if(f)return Number(f);return r.value==="Envio para outra cidade"?null:0}
 document.getElementById("saco").addEventListener("change",function(){render()});
 var FAIXAS=[["bebe","Bebê (RN–12m)"],["1-2","1–2 anos"],["3-6","3–6 anos"],["calcados","Calçados"]];
@@ -301,14 +308,25 @@ function render(){
   var fr=frete();
   document.getElementById("spec").textContent=brl(tot);
   document.getElementById("sfrete").textContent=fr===null?"a calcular no WhatsApp":(fr?brl(fr):"grátis");
-  document.getElementById("stotal").textContent=brl(tot+(fr||0))+(fr===null?" + frete":"");
+  var base=tot+(fr||0),pagSel=document.querySelector('input[name="pag"]:checked').value,credito=pagSel==="Crédito",psel=document.getElementById("sparc");
+  document.getElementById("sparcBox").hidden=!credito;
+  var c=null;
+  if(credito&&base>0){
+    var atual=Number(psel.value)||1,opts="";
+    for(var n=1;n<=12;n++){var cc=cartao(base,n);if(n>1&&cc.parcela<5)break;opts+='<option value="'+n+'">'+n+'x de '+brl(cc.parcela)+' (total '+brl(cc.total)+')</option>'}
+    psel.innerHTML=opts;if(!psel.querySelector('option[value="'+atual+'"]'))atual=1;psel.value=String(atual);
+    c=cartao(base,atual);
+  }
+  document.getElementById("staxaRow").hidden=!c;
+  if(c)document.getElementById("staxa").textContent="+ "+brl(c.taxa);
+  document.getElementById("stotal").textContent=brl(c?c.total:base)+(fr===null?" + frete":"");
   var rv=document.querySelector('input[name="receb"]:checked').value,entrega=rv!=="Retirada em Londrina",fora=rv==="Envio para outra cidade";
   var sb=document.getElementById("sendBox"),ol=document.querySelector('input[name="receb"]:checked').closest("label");
   sb.hidden=!entrega;
   if(entrega&&ol.nextElementSibling!==sb){ol.parentNode.insertBefore(sb,ol.nextSibling)}
   document.getElementById("sendLbl").textContent=fora?"CEP e endereço pra envio":"Endereço de entrega";
   document.getElementById("send").placeholder=fora?"CEP, rua, número, bairro e cidade":"Rua, número e bairro";
-  document.getElementById("spagDica").textContent=document.querySelector('input[name="pag"]:checked').value==="Crédito"?"No crédito, as taxas da bandeira são acrescentadas ao valor — a gente te passa o total no WhatsApp.":"";
+  document.getElementById("spagDica").textContent=credito?"Taxa do cartão já incluída no total acima"+(fr===null?" (sem o frete, que a gente calcula pelo CEP — a taxa é refeita com ele)":"")+". No Pix não tem taxa.":"";
   document.getElementById("sacoN").textContent=saco.length;
   document.getElementById("sacoBtn").classList.toggle("tem",saco.length>0);
 }
@@ -337,7 +355,9 @@ document.getElementById("szap").addEventListener("click",function(){
   erro.textContent="";
   try{localStorage.setItem("ninho-nome",nome)}catch(e){}
   var tot=0,linhas=saco.map(function(id){var p=PECAS.filter(function(x){return x.id===id})[0];tot+=p.preco;return "• "+p.nome+" ("+p.id+", tam. "+p.tam+") — "+brl(p.preco)});
-  var fr=frete();var msg="Oi! Aqui é "+nome+". Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+(fr?" ("+brl(fr)+")":"")+(precisaEnd?"\nEndereço: "+ender:"")+"\nPagamento: "+pag+"\nTotal das peças: "+brl(tot)+(fr===null?"\nFrete: calcular pelo meu CEP":"\nTotal com entrega: "+brl(tot+(fr||0)));
+  var fr=frete(),base=tot+(fr||0),pagTxt=pag,totalFinal=base;
+  if(pag==="Crédito"){var np=Number(document.getElementById("sparc").value)||1,cc=cartao(base,np);pagTxt="Crédito em "+np+"x de "+brl(cc.parcela)+" (total "+brl(cc.total)+(fr===null?" sem o frete":"")+")";totalFinal=cc.total}
+  var msg="Oi! Aqui é "+nome+". Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+(fr?" ("+brl(fr)+")":"")+(precisaEnd?"\nEndereço: "+ender:"")+"\nPagamento: "+pagTxt+"\nTotal das peças: "+brl(tot)+(fr===null?"\nFrete: calcular pelo meu CEP":"\nTotal com entrega"+(pag==="Crédito"?" e taxa do cartão":"")+": "+brl(totalFinal));
   window.open("https://wa.me/5543991900501?text="+encodeURIComponent(msg),"_blank");
 });
 try{document.getElementById("snome").value=localStorage.getItem("ninho-nome")||""}catch(e){}
