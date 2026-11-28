@@ -87,6 +87,18 @@ section[id]{scroll-margin-top:112px}
 .opt input{margin-top:5px;accent-color:var(--clay)}
 .opt b{display:block}
 .opt span{color:var(--mut);font-size:.88rem;font-weight:700}
+.campo{display:block;margin:0 0 12px}
+.campo>b{display:block;font-weight:800;margin-bottom:6px}
+.campo input{width:100%;font:600 1rem Nunito,sans-serif;color:var(--ink);background:#FFF8EF;border:2px solid #EBD9C3;border-radius:14px;padding:12px 14px;min-height:48px}
+.campo input:focus{outline:none;border-color:var(--clay)}
+.pagrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.pagrow label{display:flex;align-items:center;justify-content:center;gap:6px;background:#FFF8EF;border:2px solid #EBD9C3;border-radius:14px;padding:10px 6px;min-height:48px;font-weight:800;cursor:pointer}
+.pagrow input{accent-color:var(--clay)}
+.pagrow label:has(input:checked),.opt:has(input:checked){border-color:var(--clay)}
+.dica{color:var(--mut);font-size:.85rem;font-weight:700;margin:0 0 12px}
+.erro{color:#A33A1E;font-weight:800;font-size:.92rem;text-align:center;margin:0 0 10px}
+.erro:empty{display:none}
+.reserva{background:#F3DFC3;border-radius:14px;padding:10px 14px;color:var(--ink);font-size:.9rem;font-weight:700;text-align:center;margin:12px 0 0}
 .stotal{display:flex;justify-content:space-between;font-weight:800;font-size:1.15rem;margin:14px 0}
 .szap{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;background:#1faa52;color:#fff;border:none;border-radius:999px;font:800 1.1rem Nunito,sans-serif;padding:16px;cursor:pointer;min-height:52px}
 .snote{color:var(--mut);font-size:.85rem;font-weight:700;text-align:center;margin:10px 0 0}
@@ -211,15 +223,26 @@ a.ig{color:var(--bg);font-weight:800;text-decoration:none}
   <div class="sacoBox">
     <h3>Sua sacolinha 🧺</h3>
     <div id="sitens"></div>
-    <p style="font-weight:800;margin:18px 0 10px">Como você prefere receber?</p>
+    <label class="campo" style="margin-top:18px"><b>Seu nome</b><input type="text" id="snome" autocomplete="name" placeholder="Como a gente te chama?"></label>
+    <p style="font-weight:800;margin:6px 0 10px">Como você prefere receber?</p>
     <label class="opt"><input type="radio" name="receb" value="Retirada em Londrina" checked><span><b>Retirada em Londrina</b><span>grátis · combinamos local e horário</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Entrega em Londrina" data-frete="10"><span><b>Entrega em Londrina</b><span>taxa fixa de R$ 10,00</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Entrega em Ibiporã ou Cambé" data-frete="15"><span><b>Entrega em Ibiporã ou Cambé</b><span>taxa fixa de R$ 15,00</span></span></label>
     <label class="opt"><input type="radio" name="receb" value="Envio para outra cidade"><span><b>Envio para outra cidade</b><span>frete calculado pelo CEP no WhatsApp</span></span></label>
+    <label class="campo" id="sendBox" hidden><b id="sendLbl">Endereço de entrega</b><input type="text" id="send" autocomplete="street-address" placeholder="Rua, número e bairro"></label>
+    <p style="font-weight:800;margin:14px 0 10px">Forma de pagamento</p>
+    <div class="pagrow">
+      <label><input type="radio" name="pag" value="Pix" checked>Pix</label>
+      <label><input type="radio" name="pag" value="Débito">Débito</label>
+      <label><input type="radio" name="pag" value="Crédito">Crédito</label>
+    </div>
+    <p class="dica" id="spagDica"></p>
     <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700;margin-top:12px"><span>Peças</span><span id="spec">R$ 0,00</span></div>
     <div style="display:flex;justify-content:space-between;color:#8A7762;font-weight:700"><span>Entrega</span><span id="sfrete">grátis</span></div>
     <div class="stotal"><span>Total</span><span id="stotal">R$ 0,00</span></div>
+    <p class="erro" id="serro" role="alert"></p>
     <button class="szap" id="szap" type="button">Finalizar no WhatsApp</button>
+    <p class="reserva">⏳ Depois de enviar, suas peças ficam reservadas por 1 hora pra você confirmar o pedido.</p>
     <p class="snote">Confirmamos a disponibilidade e o valor final com você no WhatsApp 💛</p>
     <p class="snote"><a href="#" id="sfechar" style="color:#6F7955">continuar olhando</a></p>
   </div>
@@ -279,6 +302,11 @@ function render(){
   document.getElementById("spec").textContent=brl(tot);
   document.getElementById("sfrete").textContent=fr===null?"a calcular no WhatsApp":(fr?brl(fr):"grátis");
   document.getElementById("stotal").textContent=brl(tot+(fr||0))+(fr===null?" + frete":"");
+  var rv=document.querySelector('input[name="receb"]:checked').value,entrega=rv!=="Retirada em Londrina",fora=rv==="Envio para outra cidade";
+  document.getElementById("sendBox").hidden=!entrega;
+  document.getElementById("sendLbl").textContent=fora?"CEP e endereço pra envio":"Endereço de entrega";
+  document.getElementById("send").placeholder=fora?"CEP, rua, número, bairro e cidade":"Rua, número e bairro";
+  document.getElementById("spagDica").textContent=document.querySelector('input[name="pag"]:checked').value==="Crédito"?"No crédito, as taxas da bandeira são acrescentadas ao valor — a gente te passa o total no WhatsApp.":"";
   document.getElementById("sacoN").textContent=saco.length;
   document.getElementById("sacoBtn").classList.toggle("tem",saco.length>0);
 }
@@ -300,10 +328,17 @@ document.getElementById("saco").addEventListener("click",function(e){if(e.target
 document.getElementById("szap").addEventListener("click",function(){
   if(!saco.length)return;
   var receb=document.querySelector('input[name="receb"]:checked').value;
+  var nome=document.getElementById("snome").value.trim(),ender=document.getElementById("send").value.trim(),pag=document.querySelector('input[name="pag"]:checked').value;
+  var precisaEnd=receb!=="Retirada em Londrina",erro=document.getElementById("serro");
+  if(!nome){erro.textContent="Faltou seu nome 💛";document.getElementById("snome").focus();return}
+  if(precisaEnd&&!ender){erro.textContent="Faltou o endereço pra entrega 💛";document.getElementById("send").focus();return}
+  erro.textContent="";
+  try{localStorage.setItem("ninho-nome",nome)}catch(e){}
   var tot=0,linhas=saco.map(function(id){var p=PECAS.filter(function(x){return x.id===id})[0];tot+=p.preco;return "• "+p.nome+" ("+p.id+", tam. "+p.tam+") — "+brl(p.preco)});
-  var fr=frete();var msg="Oi! Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+(fr?" ("+brl(fr)+")":"")+"\nTotal das peças: "+brl(tot)+(fr===null?"\nFrete: calcular pelo meu CEP":"\nTotal com entrega: "+brl(tot+(fr||0)));
+  var fr=frete();var msg="Oi! Aqui é "+nome+". Quero finalizar minha sacolinha 🧺\n"+linhas.join("\n")+"\nRecebimento: "+receb+(fr?" ("+brl(fr)+")":"")+(precisaEnd?"\nEndereço: "+ender:"")+"\nPagamento: "+pag+"\nTotal das peças: "+brl(tot)+(fr===null?"\nFrete: calcular pelo meu CEP":"\nTotal com entrega: "+brl(tot+(fr||0)));
   window.open("https://wa.me/5543991900501?text="+encodeURIComponent(msg),"_blank");
 });
+try{document.getElementById("snome").value=localStorage.getItem("ninho-nome")||""}catch(e){}
 render();
 </script>
 
