@@ -241,25 +241,29 @@ function frete(){var r=document.querySelector('input[name="receb"]:checked');if(
 document.getElementById("saco").addEventListener("change",function(){render()});
 var FAIXAS=[["bebe","Bebê (RN–12m)"],["1-2","1–2 anos"],["3-6","3–6 anos"],["calcados","Calçados"]];
 var GENS=[["menina","Menina"],["menino","Menino"]];
-var fGen="",fFaixa="";
+var fGen=[],fFaixa=[];
 function passaGen(p,g){return !g||p.gen===g||p.gen==="unissex"}
+function passa(p){return (!fGen.length||fGen.some(function(g){return passaGen(p,g)}))&&(!fFaixa.length||fFaixa.indexOf(p.faixa)>=0)}
 function chip(grupo,val,txt,on){return '<button type="button" class="chip'+(on?" on":"")+'" data-g="'+grupo+'" data-v="'+val+'" aria-pressed="'+(on?"true":"false")+'">'+txt+'</button>'}
 function renderFiltros(){
   var gens=GENS.filter(function(x){return PECAS.some(function(p){return passaGen(p,x[0])})});
   var faixas=FAIXAS.filter(function(x){return PECAS.some(function(p){return p.faixa===x[0]})});
   document.getElementById("filtros").innerHTML=
-    '<div class="frow">'+chip("gen","","Todos",!fGen)+gens.map(function(x){return chip("gen",x[0],x[1],fGen===x[0])}).join("")+'</div>'+
-    '<div class="frow">'+chip("faixa","","Todos",!fFaixa)+faixas.map(function(x){return chip("faixa",x[0],x[1],fFaixa===x[0])}).join("")+'</div>';
+    '<div class="frow">'+chip("gen","","Todos",!fGen.length)+gens.map(function(x){return chip("gen",x[0],x[1],fGen.indexOf(x[0])>=0)}).join("")+'</div>'+
+    '<div class="frow">'+chip("faixa","","Todos",!fFaixa.length)+faixas.map(function(x){return chip("faixa",x[0],x[1],fFaixa.indexOf(x[0])>=0)}).join("")+'</div>';
 }
 document.getElementById("filtros").addEventListener("click",function(e){
   var b=e.target.closest(".chip");if(!b)return;
-  if(b.getAttribute("data-g")==="gen"){fGen=b.getAttribute("data-v")}else{fFaixa=b.getAttribute("data-v")}
+  var arr=b.getAttribute("data-g")==="gen"?fGen:fFaixa,v=b.getAttribute("data-v"),i=arr.indexOf(v);
+  if(!v){arr.length=0}else if(i>=0){arr.splice(i,1)}else{arr.push(v)}
+  var sx=[].map.call(document.querySelectorAll("#filtros .frow"),function(r){return r.scrollLeft});
   render();
+  [].forEach.call(document.querySelectorAll("#filtros .frow"),function(r,k){r.scrollLeft=sx[k]||0});
 });
 function render(){
   renderFiltros();
   var g=document.getElementById("prods");
-  var lista=PECAS.filter(function(p){return passaGen(p,fGen)&&(!fFaixa||p.faixa===fFaixa)});
+  var lista=PECAS.filter(passa);
   document.getElementById("fcount").textContent=lista.length===1?"1 peça":lista.length+" peças";
   g.innerHTML=!lista.length?'<div class="vazio">Nenhuma pecinha com esse filtro por enquanto 🪺<button type="button" id="limpar">Ver todas</button></div>':lista.map(function(p){
     var no=saco.indexOf(p.id)>=0;
@@ -280,7 +284,7 @@ function render(){
 }
 document.getElementById("prods").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;
-  if(b.id==="limpar"){fGen="";fFaixa="";render();return}
+  if(b.id==="limpar"){fGen=[];fFaixa=[];render();return}
   var id=b.getAttribute("data-id");var i=saco.indexOf(id);
   if(i>=0){saco.splice(i,1)}else{saco.push(id)}
   salvar();render();
